@@ -1,0 +1,6 @@
+set_coloumns:<roll no><name><address><email><mobilenumber>
+data_seperator:<,>
+set_joint:<+>
+set_coloumn:<|>
+set_row:<->
+file_name<data.txt>

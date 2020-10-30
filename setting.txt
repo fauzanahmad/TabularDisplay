@@ -1,4 +1,4 @@
-set_coloumns:<roll no><name><address><email><mobilenumber>
+set_coloumns:<roll no><name><address><email>
 data_seperator:<,>
 set_joint:<+>
 set_coloumn:<|>

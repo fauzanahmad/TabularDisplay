@@ -40,14 +40,13 @@ char g_cDataSeperator;
 char g_cJoint;
 char g_cColoumn;
 char g_cRow;
-char **g_Columns;
 int *g_coloumns_len;
 int g_iNumberOfColoumns = 0;
 char g_szDataFileName[1024] = {0};
 
 #define UPDATE_IF_GREATER(X,Y) if(X>Y) Y = X
 
-void ReadSettingFile();
+int ReadSettingFile();
 void SetData(char *szBuffer , char *data , int datatype);
 void DrawLine();
 void SetValues();
@@ -58,3 +57,4 @@ void insertlast(struct Data **phead,struct Data **plast,struct Data data);
 void copystr(char *str1,char *str2,int len);
 void writeinlogfile(char *szBuffer,...);
 void PrintfColoums();
+void FreeAllMemory();

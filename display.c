@@ -7,15 +7,19 @@ int main()
 	FILE *fptr = fopen("log.txt","w");
 	if(CHECK_NULL(fptr))
 	{
-		printf("file opening failed");
+		printf("log file opening failed");
 	}
-	fclose(fptr);
+	if(fptr)
+		fclose(fptr);
 #endif
 
 	writeinlogfile(ENTRING_FUNCTION_STR,__FUNCTION__);
 
-	ReadSettingFile();
-	SetValues();
+	if(ReadSettingFile() == 0)
+	{	
+		SetValues();
+		FreeAllMemory();
+	}
 
         writeinlogfile(LEAVE_FUNCTION_STR,__FUNCTION__);
 
@@ -52,6 +56,12 @@ void SetValues()
 	int iCounter = 0;
 	int ilen = 0;
 
+	if(CHECK_NULL(fptr))
+	{
+		printf("data file opening failed.\n");
+		return;
+	}
+
         writeinlogfile(ENTRING_FUNCTION_STR,__FUNCTION__);
 
 	DrawLine();	
@@ -74,7 +84,7 @@ void SetValues()
 			szBuffer[1] = ' ';
 			strcpy(szBuffer+2,szTemp);			
 			ilen = strlen(szTemp);
-			//UPDATE_IF_GREATER(ilen,g_coloumns_len[iCounter]);			
+						
 			memset(szBuffer+ilen+2,' ',g_coloumns_len[iCounter]+1 - ilen);		
 
 			if(iCounter == g_iNumberOfColoumns-1)
@@ -120,7 +130,8 @@ void DrawLine()
 }
 
 
-void ReadSettingFile()
+
+int ReadSettingFile()
 {
 	FILE *fptr = fopen("setting.txt","r");
 	char szBuffer[5001] = {0};
@@ -130,56 +141,75 @@ void ReadSettingFile()
 	int colcount = 0;
 	int iCounter = 0;
 	int ilen = 0;
+	int iflag = 0;
 
         writeinlogfile(ENTRING_FUNCTION_STR,__FUNCTION__);
 
 	if(CHECK_NULL(fptr))
 	{
 		printf("setting file opening failed.\n");
-		return;
+		return -1;
 	}
 
 	while( !feof(fptr))
 	{
 		memset(szBuffer,0x00,sizeof(szBuffer));
 		fgets(szBuffer,sizeof(szBuffer),fptr);
+
 		if(strstr(szBuffer,"set_coloumns"))
 		{
 			pcStart = strchr(szBuffer,'<');
+			pcEnd = strchr(pcStart,'>');
 
 			while(1)
 			{
-				if( CHECK_NOT_NULL(pcStart) && strchr(pcStart,'>'))
-					colcount++;
+				if( CHECK_NOT_NULL(pcStart) && CHECK_NOT_NULL(pcEnd) )
+				{
+					if( (pcEnd-pcStart) > 1 )
+						colcount++;
+					else
+						break;
+				}
 				else
 					break;
 
-				pcStart = strchr(pcStart+1,'<');
-
+				pcStart = strchr(pcEnd,'<');
+				if(CHECK_NOT_NULL(pcStart))
+					pcEnd = strchr(pcStart,'>');
+				else
+					break;
 			}
-			g_iNumberOfColoumns = colcount;
-			g_coloumns_len = (int *) malloc(colcount);
-			g_Columns = (char **) malloc(colcount * sizeof(char *));
 
-			pcStart = szBuffer;
-			while(colcount--)
+
+			if(colcount)
 			{
-				pcStart = strchr(pcStart,'<');
-				pcEnd = strchr(pcStart,'>');
-			
-				if(CHECK_NOT_NULL(pcStart) && CHECK_NOT_NULL(pcEnd))
+				g_iNumberOfColoumns = colcount;
+				g_coloumns_len = (int *) malloc(colcount);
+				
+				pcStart = szBuffer;
+				while(colcount--)
 				{
-					memset(szTemp,0x00,sizeof(szTemp));
-					pcStart +=1; 
-					strncpy(szTemp,pcStart,pcEnd-pcStart);
+					pcStart = strchr(pcStart,'<');
+					pcEnd = strchr(pcStart,'>');
+			
+					if(CHECK_NOT_NULL(pcStart) && CHECK_NOT_NULL(pcEnd))
+					{
+						memset(szTemp,0x00,sizeof(szTemp));
+						pcStart +=1;
+						strncpy(szTemp,pcStart,pcEnd-pcStart);
 
-					ilen = strlen(szTemp);
-					UPDATE_IF_GREATER(ilen,g_coloumns_len[iCounter]);
+						ilen = strlen(szTemp);
+						UPDATE_IF_GREATER(ilen,g_coloumns_len[iCounter]);
 
-					g_Columns[iCounter] = (char *)malloc(ilen+1);
-					iCounter++;
+						iCounter++;
+					}
+					pcStart = pcEnd+1;
 				}
-				pcStart = pcEnd+1;
+			}
+			else
+			{
+				iflag = 1;
+				printf("coloumns not properly specified\n");
 			}
 		}
 		else if(strstr(szBuffer,"set_joint"))
@@ -187,12 +217,20 @@ void ReadSettingFile()
 			pcStart = strchr(szBuffer,'<');
 			pcEnd = strchr(pcStart,'>');
 
-			if(CHECK_NOT_NULL(pcStart) && CHECK_NOT_NULL(pcEnd))
+			if(CHECK_NOT_NULL(pcStart) && CHECK_NOT_NULL(pcEnd) )
 			{
-				memset(szTemp,0x00,sizeof(szTemp));
-				pcStart +=1;
-				strncpy(szTemp,pcStart,pcEnd-pcStart);
-				g_cJoint = szTemp[0];
+				if(( pcEnd - pcStart ) > 1  )
+				{
+					memset(szTemp,0x00,sizeof(szTemp));
+					pcStart +=1;
+					strncpy(szTemp,pcStart,pcEnd-pcStart);
+					g_cJoint = szTemp[0];
+				}
+				else
+				{
+					iflag = 1;
+					printf("join for coloumn and row is not specified\n");
+				}
 			}
 			pcStart = pcEnd+1;
 		}
@@ -201,13 +239,21 @@ void ReadSettingFile()
 			pcStart = strchr(szBuffer,'<');
                 	pcEnd = strchr(pcStart,'>');
 
-                	if(CHECK_NOT_NULL(pcStart) && CHECK_NOT_NULL(pcEnd))
-               		{
-	                        memset(szTemp,0x00,sizeof(szTemp));
-				pcStart +=1;
-                	        strncpy(szTemp,pcStart,pcEnd-pcStart);
-                        	g_cColoumn = szTemp[0];
-        	        }
+                	if(CHECK_NOT_NULL(pcStart) && CHECK_NOT_NULL(pcEnd) )
+			{
+				if(( pcEnd - pcStart ) > 1 )
+	               		{
+		                        memset(szTemp,0x00,sizeof(szTemp));
+					pcStart +=1;
+                		        strncpy(szTemp,pcStart,pcEnd-pcStart);
+                        		g_cColoumn = szTemp[0];
+	        	        }
+				else
+                	        {
+					iflag = 1;
+                        	        printf("coloumn charecter is not specified\n");
+                        	}
+			}
 			pcStart = pcEnd+1;
 		}
 		else if(strstr(szBuffer,"data_seperator"))
@@ -216,12 +262,20 @@ void ReadSettingFile()
                 	pcEnd = strchr(pcStart,'>');
 
                 	if(CHECK_NOT_NULL(pcStart) && CHECK_NOT_NULL(pcEnd))
-	                {
-        	                memset(szTemp,0x00,sizeof(szTemp));
-				pcStart += 1;
-                        	strncpy(szTemp,pcStart,pcEnd-pcStart);
-	                        g_cDataSeperator = szTemp[0];
-                	}
+			{
+				if((pcEnd-pcStart)>1)
+	                	{
+        	               		memset(szTemp,0x00,sizeof(szTemp));
+					pcStart += 1;
+                        		strncpy(szTemp,pcStart,pcEnd-pcStart);
+	                        	g_cDataSeperator = szTemp[0];
+                		}
+				else
+                        	{
+					iflag = 1;
+                                	printf("data seperator charecter is not specified\n");
+        	                }
+			}
 			pcStart = pcEnd+1;
 		}
 		else if(strstr(szBuffer,"set_row"))
@@ -229,14 +283,22 @@ void ReadSettingFile()
 			pcStart = strchr(szBuffer,'<');
                         pcEnd = strchr(pcStart,'>');
 
-                        if(CHECK_NOT_NULL(pcStart) && CHECK_NOT_NULL(pcEnd))
-                        {
-                                memset(szTemp,0x00,sizeof(szTemp));
-                                pcStart += 1;
-                                strncpy(szTemp,pcStart,pcEnd-pcStart);
-                                g_cRow = szTemp[0];
+                        if(CHECK_NOT_NULL(pcStart) && CHECK_NOT_NULL(pcEnd) )
+			{
+				if((pcEnd-pcStart)>1) 
+                        	{
+                        	        memset(szTemp,0x00,sizeof(szTemp));
+                        	        pcStart += 1;
+                        	        strncpy(szTemp,pcStart,pcEnd-pcStart);
+                        	        g_cRow = szTemp[0];
                          
-                        }
+                        	}
+                        	else
+                        	{
+					iflag = 1;
+                        	        printf("row charecter is not specified\n");
+                        	}
+			}
                         pcStart = pcEnd+1;
 		}
 		else if(strstr(szBuffer,"file_name"))
@@ -244,45 +306,65 @@ void ReadSettingFile()
 			pcStart = strchr(szBuffer,'<');
 			pcEnd = strchr(pcStart,'>');
 
-			if(CHECK_NOT_NULL(pcStart) && CHECK_NOT_NULL(pcEnd))
+			if(CHECK_NOT_NULL(pcStart) && CHECK_NOT_NULL(pcEnd) )
 			{
-				memset(szTemp,0x00,sizeof(szTemp));
-				pcStart += 1;
-				strncpy(szTemp,pcStart,pcEnd-pcStart);
-				strcpy(g_szDataFileName,szTemp);
+			 	if(	(pcEnd-pcStart)>1)
+				{
+					memset(szTemp,0x00,sizeof(szTemp));
+					pcStart += 1;
+					strncpy(szTemp,pcStart,pcEnd-pcStart);
+					strcpy(g_szDataFileName,szTemp);
+				}
+                        	else
+                        	{
+					iflag = 1;
+                        	        printf("file name is not specified\n");	
+        	                }
 			}
 			pcStart = pcEnd+1;
 		}
 	}
 	fclose(fptr);
 
-
-	fptr = fopen(g_szDataFileName,"r");
-
-	if(CHECK_NULL(fptr))
+	if(!iflag)
 	{
-		printf("file opening failed.\n");
-		return;
+		fptr = fopen(g_szDataFileName,"r");
+
+		if(CHECK_NULL(fptr))
+		{
+			printf("data file opening failed.\n");
+			return -1;
+		}
+
+		while( !feof( fptr ) )
+        	{
+			memset(szBuffer,0x00,sizeof(szBuffer));
+        	        pcStart = fgets(szBuffer, sizeof(szBuffer),fptr);
+
+        	        if(NULL == pcStart)
+        	                break;
+
+        	        for ( iCounter = 0 ; iCounter < g_iNumberOfColoumns ; iCounter++)
+        	        {
+        	                ShrinkData(&pcStart,&pcEnd,szTemp,sizeof(szTemp),g_cDataSeperator);
+        	                UPDATE_IF_GREATER(strlen(szTemp),g_coloumns_len[iCounter]);
+        	        }
+
+        	}
+        	fclose(fptr);
+	}
+	else
+	{
+		printf("\n\n\n ------------------------------------------------------------------------------------------\n\n\n");
+		printf("settings you provided is wrong\n");
+		printf("please read README.txt file for reference\n");
+		printf("\n\n\n ------------------------------------------------------------------------------------------\n\n\n");
 	}
 
-	while( !feof( fptr ) )
-        {
-		memset(szBuffer,0x00,sizeof(szBuffer));
-                pcStart = fgets(szBuffer, sizeof(szBuffer),fptr);
-
-                if(NULL == pcStart)
-                        break;
-
-                for ( iCounter = 0 ; iCounter < g_iNumberOfColoumns ; iCounter++)
-                {
-                        ShrinkData(&pcStart,&pcEnd,szTemp,sizeof(szTemp),g_cDataSeperator);
-                        UPDATE_IF_GREATER(strlen(szTemp),g_coloumns_len[iCounter]);
-                }
-
-        }
-        fclose(fptr);
 
         writeinlogfile(LEAVE_FUNCTION_STR,__FUNCTION__);
+
+	return iflag;
 
 }
 
@@ -300,7 +382,7 @@ void PrintfColoums()
 
 	if(CHECK_NULL(fptr))
 	{
-		printf("file opening failed.\n");
+		printf("settings file opening failed.\n");
 		return;
 	}
 
@@ -335,6 +417,7 @@ void PrintfColoums()
                                 pcStart = pcEnd+1;
 
 				printf("%s",szMainBuffer);
+				memset(szMainBuffer,0x00,sizeof(szMainBuffer));
 
 				icolcount++;
                         }
@@ -383,3 +466,12 @@ void writeinlogfile(char *szFormatBuffer,...)
 
 }
 
+void FreeAllMemory()
+{
+	writeinlogfile(ENTRING_FUNCTION_STR,__FUNCTION__);
+
+	if(CHECK_NOT_NULL(g_coloumns_len))
+		free(g_coloumns_len);
+
+	writeinlogfile(LEAVE_FUNCTION_STR,__FUNCTION__);
+}

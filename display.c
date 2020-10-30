@@ -26,110 +26,6 @@ int main()
 	return 0;
 }
 
-void ShrinkData(char **pcStart, char **pcEnd, char *szTemp, int size , char cSeperator)
-{
-
-        writeinlogfile(ENTRING_FUNCTION_STR,__FUNCTION__);
-
-	*pcEnd = strchr(*pcStart,cSeperator);
-	if( CHECK_NULL(*pcEnd ))
-	{
-		printf("No proper data format");
-		return;
-	}
-	memset(szTemp,0x00,size);
-	strncpy( szTemp , *pcStart, *pcEnd - *pcStart);
-	*pcStart = *pcEnd+1;
-
-        writeinlogfile(LEAVE_FUNCTION_STR,__FUNCTION__);
-
-}
-
-void SetValues()
-{
-	FILE *fptr = fopen(g_szDataFileName,"r");
-	char szBuffer[512] = {0};
-	char *pcStart = NULL;
-	char *pcEnd = NULL;
-	char szTemp[51] = {0};
-	char szBufferMax [1025] = {0};
-	int iCounter = 0;
-	int ilen = 0;
-
-	if(CHECK_NULL(fptr))
-	{
-		printf("data file opening failed.\n");
-		return;
-	}
-
-        writeinlogfile(ENTRING_FUNCTION_STR,__FUNCTION__);
-
-	DrawLine();	
-	PrintfColoums();
-	DrawLine();
-	
-
-	while( !feof( fptr ) )
-	{
-		pcStart = fgets(szBufferMax, sizeof(szBuffer),fptr);
-
-		if(NULL == pcStart)
-			break;
-
-		for ( iCounter = 0 ; iCounter < g_iNumberOfColoumns ; iCounter++)
-		{
-			memset(szBuffer,0x00,sizeof(szBuffer));
-			ShrinkData(&pcStart,&pcEnd,szTemp,sizeof(szTemp),g_cDataSeperator);
-			szBuffer[0] = g_cColoumn;
-			szBuffer[1] = ' ';
-			strcpy(szBuffer+2,szTemp);			
-			ilen = strlen(szTemp);
-						
-			memset(szBuffer+ilen+2,' ',g_coloumns_len[iCounter]+1 - ilen);		
-
-			if(iCounter == g_iNumberOfColoumns-1)
-			{
-				szBuffer[g_coloumns_len[iCounter]+3] = g_cColoumn;
-				szBuffer[g_coloumns_len[iCounter]+4] = '\0';
-				printf("%s\n",szBuffer);
-			}
-			else
-				printf("%s",szBuffer);
-		}			
-
-	}
-	fclose(fptr);
-
-	DrawLine();
-
-        writeinlogfile(LEAVE_FUNCTION_STR,__FUNCTION__);
-
-}
-
-void DrawLine()
-{
-	int i = 0;
-	char szBuffer[1025] = {0};
-
-        writeinlogfile(ENTRING_FUNCTION_STR,__FUNCTION__);	
-
-	while(i < g_iNumberOfColoumns)
-	{
-		szBuffer[0] = g_cJoint;
-		memset(szBuffer+1,(int)g_cRow,g_coloumns_len[i]+2);
-		
-		if(i+1 == g_iNumberOfColoumns)
-			szBuffer[g_coloumns_len[i]+3] = g_cJoint;
-
-		printf("%s",szBuffer);
-		memset(szBuffer,0x00,sizeof(szBuffer));
-		i++;
-	}
-	printf("\n");
-        writeinlogfile(LEAVE_FUNCTION_STR,__FUNCTION__);
-}
-
-
 
 int ReadSettingFile()
 {
@@ -368,6 +264,109 @@ int ReadSettingFile()
 
 }
 
+void SetValues()
+{
+	FILE *fptr = fopen(g_szDataFileName,"r");
+	char szBuffer[512] = {0};
+	char *pcStart = NULL;
+	char *pcEnd = NULL;
+	char szTemp[51] = {0};
+	char szBufferMax [1025] = {0};
+	int iCounter = 0;
+	int ilen = 0;
+
+	if(CHECK_NULL(fptr))
+	{
+		printf("data file opening failed.\n");
+		return;
+	}
+
+        writeinlogfile(ENTRING_FUNCTION_STR,__FUNCTION__);
+
+	DrawLine();	
+	PrintfColoums();
+	DrawLine();
+	
+
+	while( !feof( fptr ) )
+	{
+		pcStart = fgets(szBufferMax, sizeof(szBuffer),fptr);
+
+		if(NULL == pcStart)
+			break;
+
+		for ( iCounter = 0 ; iCounter < g_iNumberOfColoumns ; iCounter++)
+		{
+			memset(szBuffer,0x00,sizeof(szBuffer));
+			ShrinkData(&pcStart,&pcEnd,szTemp,sizeof(szTemp),g_cDataSeperator);
+			szBuffer[0] = g_cColoumn;
+			szBuffer[1] = ' ';
+			strcpy(szBuffer+2,szTemp);			
+			ilen = strlen(szTemp);
+						
+			memset(szBuffer+ilen+2,' ',g_coloumns_len[iCounter]+1 - ilen);		
+
+			if(iCounter == g_iNumberOfColoumns-1)
+			{
+				szBuffer[g_coloumns_len[iCounter]+3] = g_cColoumn;
+				szBuffer[g_coloumns_len[iCounter]+4] = '\0';
+				printf("%s\n",szBuffer);
+			}
+			else
+				printf("%s",szBuffer);
+		}			
+
+	}
+	fclose(fptr);
+
+	DrawLine();
+
+        writeinlogfile(LEAVE_FUNCTION_STR,__FUNCTION__);
+
+}
+
+void ShrinkData(char **pcStart, char **pcEnd, char *szTemp, int size , char cSeperator)
+{
+
+        writeinlogfile(ENTRING_FUNCTION_STR,__FUNCTION__);
+
+	*pcEnd = strchr(*pcStart,cSeperator);
+	if( CHECK_NULL(*pcEnd ))
+	{
+		printf("No proper data format");
+		return;
+	}
+	memset(szTemp,0x00,size);
+	strncpy( szTemp , *pcStart, *pcEnd - *pcStart);
+	*pcStart = *pcEnd+1;
+
+        writeinlogfile(LEAVE_FUNCTION_STR,__FUNCTION__);
+
+}
+
+void DrawLine()
+{
+	int i = 0;
+	char szBuffer[1025] = {0};
+
+        writeinlogfile(ENTRING_FUNCTION_STR,__FUNCTION__);	
+
+	while(i < g_iNumberOfColoumns)
+	{
+		szBuffer[0] = g_cJoint;
+		memset(szBuffer+1,(int)g_cRow,g_coloumns_len[i]+2);
+		
+		if(i+1 == g_iNumberOfColoumns)
+			szBuffer[g_coloumns_len[i]+3] = g_cJoint;
+
+		printf("%s",szBuffer);
+		memset(szBuffer,0x00,sizeof(szBuffer));
+		i++;
+	}
+	printf("\n");
+        writeinlogfile(LEAVE_FUNCTION_STR,__FUNCTION__);
+}
+
 void PrintfColoums()
 {	
 	FILE *fptr = fopen("setting.txt","r");
@@ -428,6 +427,16 @@ void PrintfColoums()
 	writeinlogfile(LEAVE_FUNCTION_STR,__FUNCTION__);
 }
 
+void FreeAllMemory()
+{
+	writeinlogfile(ENTRING_FUNCTION_STR,__FUNCTION__);
+
+	if(CHECK_NOT_NULL(g_coloumns_len))
+		free(g_coloumns_len);
+
+	writeinlogfile(LEAVE_FUNCTION_STR,__FUNCTION__);
+}
+
 void writeinlogfile(char *szFormatBuffer,...)
 {
 	
@@ -464,14 +473,4 @@ void writeinlogfile(char *szFormatBuffer,...)
 
 #endif
 
-}
-
-void FreeAllMemory()
-{
-	writeinlogfile(ENTRING_FUNCTION_STR,__FUNCTION__);
-
-	if(CHECK_NOT_NULL(g_coloumns_len))
-		free(g_coloumns_len);
-
-	writeinlogfile(LEAVE_FUNCTION_STR,__FUNCTION__);
 }

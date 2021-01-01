@@ -1,14 +1,14 @@
 CC = cc
 CFLAGS = -g -w
-Target = display
+Target = graph
 
-$(Target) : display.o
-	$(CC) display.o -o $(Target)
+$(Target) : graph.o
+	$(CC) graph.o -o $(Target)
 
-display.o : display.c display.h
-	$(CC) $(CFLAGS) -c display.c
+graph.o : graph.c graph.h
+	$(CC) $(CFLAGS) -c graph.c
 
 .PHONY : clean
 clean :
-	rm -rf display.o $(Target)
+	rm -rf graph.o $(Target)
 

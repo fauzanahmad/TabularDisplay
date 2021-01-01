@@ -1,6 +1,0 @@
-set_coloumns:<>
-data_seperator:<>
-set_joint:<>
-set_coloumn:<>
-set_row:<>
-file_name<>

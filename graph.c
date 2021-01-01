@@ -15,7 +15,7 @@ int main()
 
 #ifdef FILE_PRINT
 	fptr = fopen ( "log.txt", "w" );
-	if(CHECK_NULL(fptr))
+	if ( CHECK_NULL( fptr ) )
 	{
 		printf ( "logfile file opening failed.\n" );
 	}

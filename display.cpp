@@ -1,4 +1,7 @@
+#include<iostream>
 #include "display.h"
+
+using namespace std;
 
 int main()
 {
@@ -7,7 +10,7 @@ int main()
 	FILE *fptr = fopen("log.txt","w");
 	if(CHECK_NULL(fptr))
 	{
-		printf("file opening failed");
+		std::cout << "file opening failed" << endl;
 	}
 	fclose(fptr);
 #endif
@@ -25,19 +28,19 @@ int main()
 void ShrinkData(char **pcStart, char **pcEnd, char *szTemp, int size , char cSeperator)
 {
 
-        writeinlogfile(ENTRING_FUNCTION_STR,__FUNCTION__);
+    writeinlogfile(ENTRING_FUNCTION_STR,__FUNCTION__);
 
 	*pcEnd = strchr(*pcStart,cSeperator);
 	if( CHECK_NULL(*pcEnd ))
 	{
-		printf("No proper data format");
+		std::cout << "No proper data format" << endl;
 		return;
 	}
 	memset(szTemp,0x00,size);
 	strncpy( szTemp , *pcStart, *pcEnd - *pcStart);
 	*pcStart = *pcEnd+1;
 
-        writeinlogfile(LEAVE_FUNCTION_STR,__FUNCTION__);
+    writeinlogfile(LEAVE_FUNCTION_STR,__FUNCTION__);
 
 }
 
@@ -52,12 +55,11 @@ void SetValues()
 	int iCounter = 0;
 	int ilen = 0;
 
-        writeinlogfile(ENTRING_FUNCTION_STR,__FUNCTION__);
+    writeinlogfile(ENTRING_FUNCTION_STR,__FUNCTION__);
 
 	DrawLine();	
 	PrintfColoums();
 	DrawLine();
-	
 
 	while( !feof( fptr ) )
 	{
@@ -70,30 +72,34 @@ void SetValues()
 		{
 			memset(szBuffer,0x00,sizeof(szBuffer));
 			ShrinkData(&pcStart,&pcEnd,szTemp,sizeof(szTemp),g_cDataSeperator);
-			szBuffer[0] = g_cColoumn;
-			szBuffer[1] = ' ';
-			strcpy(szBuffer+2,szTemp);			
+			cout << RED << g_cColoumn << RESET << ' ';
+			cout << GREEN << szTemp << RESET;
+
 			ilen = strlen(szTemp);
-			//UPDATE_IF_GREATER(ilen,g_coloumns_len[iCounter]);			
-			memset(szBuffer+ilen+2,' ',g_coloumns_len[iCounter]+1 - ilen);		
+			
+			printSpace(g_coloumns_len[iCounter]-ilen);
+			//memset(szBuffer+ilen+2,' ',g_coloumns_len[iCounter]+1 - ilen);
 
 			if(iCounter == g_iNumberOfColoumns-1)
 			{
-				szBuffer[g_coloumns_len[iCounter]+3] = g_cColoumn;
-				szBuffer[g_coloumns_len[iCounter]+4] = '\0';
-				printf("%s\n",szBuffer);
+				//szBuffer[g_coloumns_len[iCounter]+3] = g_cColoumn;
+				//szBuffer[g_coloumns_len[iCounter]+4] = '\0';
+				//std::cout << szBuffer << endl;
+
+				cout << RED << g_cColoumn << RESET;
+				cout << endl;
 			}
 			else
-				printf("%s",szBuffer);
-		}			
-
+			{
+				std::cout << GREEN << szBuffer << RESET;
+			}
+		}	
 	}
 	fclose(fptr);
 
 	DrawLine();
 
-        writeinlogfile(LEAVE_FUNCTION_STR,__FUNCTION__);
-
+    writeinlogfile(LEAVE_FUNCTION_STR,__FUNCTION__);
 }
 
 void DrawLine()
@@ -101,8 +107,9 @@ void DrawLine()
 	int i = 0;
 	char szBuffer[1025] = {0};
 
-        writeinlogfile(ENTRING_FUNCTION_STR,__FUNCTION__);	
+    writeinlogfile(ENTRING_FUNCTION_STR,__FUNCTION__);	
 
+	std::cout << RED;
 	while(i < g_iNumberOfColoumns)
 	{
 		szBuffer[0] = g_cJoint;
@@ -110,13 +117,13 @@ void DrawLine()
 		
 		if(i+1 == g_iNumberOfColoumns)
 			szBuffer[g_coloumns_len[i]+3] = g_cJoint;
-
-		printf("%s",szBuffer);
+		std::cout << szBuffer;
 		memset(szBuffer,0x00,sizeof(szBuffer));
 		i++;
 	}
-	printf("\n");
-        writeinlogfile(LEAVE_FUNCTION_STR,__FUNCTION__);
+	std::cout << RESET;
+	std::cout << endl;
+    writeinlogfile(LEAVE_FUNCTION_STR,__FUNCTION__);
 }
 
 
@@ -135,7 +142,7 @@ void ReadSettingFile()
 
 	if(CHECK_NULL(fptr))
 	{
-		printf("setting file opening failed.\n");
+		std::cout << "setting file opening failed.\n" << endl;
 		return;
 	}
 
@@ -261,7 +268,7 @@ void ReadSettingFile()
 
 	if(CHECK_NULL(fptr))
 	{
-		printf("file opening failed.\n");
+		std::cout << "file opening failed.\n" << endl;
 		return;
 	}
 
@@ -300,48 +307,46 @@ void PrintfColoums()
 
 	if(CHECK_NULL(fptr))
 	{
-		printf("file opening failed.\n");
+		std::cout << ("file opening failed.\n");
 		return;
 	}
 
 	while( !feof(fptr))
+    {
+	    memset(szBuffer,0x00,sizeof(szBuffer));
+        fgets(szBuffer,sizeof(szBuffer),fptr);
+        if(strstr(szBuffer,"set_coloumns"))
         {
-                memset(szBuffer,0x00,sizeof(szBuffer));
-                fgets(szBuffer,sizeof(szBuffer),fptr);
-                if(strstr(szBuffer,"set_coloumns"))
+            pcStart = szBuffer;
+        	while(icolcount < g_iNumberOfColoumns)
+            {
+                pcStart = strchr(pcStart,'<');
+            	pcEnd = strchr(pcStart,'>');
+
+                if(CHECK_NOT_NULL(pcStart) && CHECK_NOT_NULL(pcEnd))
                 {
-                        pcStart = szBuffer;
-                        while(icolcount < g_iNumberOfColoumns)
-                        {
-                                pcStart = strchr(pcStart,'<');
-                                pcEnd = strchr(pcStart,'>');
+                	memset(szTemp,0x00,sizeof(szTemp));
+					pcStart +=1;
+					strncpy(szTemp,pcStart,pcEnd-pcStart);
+					ilen = strlen(szTemp);
 
-                                if(CHECK_NOT_NULL(pcStart) && CHECK_NOT_NULL(pcEnd))
-                                {
-                                        memset(szTemp,0x00,sizeof(szTemp));
-                                        pcStart +=1;
-                                        strncpy(szTemp,pcStart,pcEnd-pcStart);
-                                        ilen = strlen(szTemp);
-
-					szMainBuffer[0] = g_cColoumn;
-					szMainBuffer[1] = ' ';
-					strcpy(szMainBuffer+2,szTemp);
-
-					memset(szMainBuffer+ilen+2,' ',g_coloumns_len[icolcount]+1 - ilen);
+					std::cout << RED << g_cColoumn << ' ' << RESET;
+					std::cout << BLUE << szTemp << RESET;
+					printSpace(g_coloumns_len[icolcount] - ilen);
 
 					if(icolcount+1 == g_iNumberOfColoumns)
-						szMainBuffer[g_coloumns_len[icolcount]+3] = g_cColoumn;
-                                }
-                                pcStart = pcEnd+1;
+						std::cout << RED << g_cColoumn << RESET;
+				}
+                pcStart = pcEnd+1;
 
-				printf("%s",szMainBuffer);
+				//std::cout << ("%s", szMainBuffer);
 
 				icolcount++;
-                        }
-                }
+           }
+        }
 	}
 	fclose(fptr);
-	printf("\n");	
+	std::cout << ("\n");	
 	writeinlogfile(LEAVE_FUNCTION_STR,__FUNCTION__);
 }
 
@@ -358,7 +363,7 @@ void writeinlogfile(char *szFormatBuffer,...)
 
 		if(CHECK_NULL(fptr))
 		{
-			printf("log file opening failed\n");
+			std::cout << ("log file opening failed\n");
 			return;
 		}
 	#endif
@@ -366,12 +371,12 @@ void writeinlogfile(char *szFormatBuffer,...)
 	
 	va_list valist;
 	va_start(valist,szFormatBuffer);
-	vsnprintf(szBuffer,sizeof(szBuffer),szFormatBuffer,valist);
+	vsnprintf (szBuffer,sizeof(szBuffer),szFormatBuffer,valist);
 	
 	va_end(valist);
 
 	#if CONSOLE_PRINT
-		printf("%s\n",szBuffer);
+		std::cout << ("%s\n",szBuffer);
 	#endif
 
 	#if FILE_PRINT
@@ -383,3 +388,11 @@ void writeinlogfile(char *szFormatBuffer,...)
 
 }
 
+void printSpace(int i)
+{
+	while (i>=0)
+	{
+		cout << ' ';
+		i--;
+	}
+}

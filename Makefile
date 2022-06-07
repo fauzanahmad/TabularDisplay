@@ -1,12 +1,12 @@
-CC = cc
+CC = g++
 CFLAGS = -g -w
 Target = display
 
 $(Target) : display.o
 	$(CC) display.o -o $(Target)
 
-display.o : display.c display.h
-	$(CC) $(CFLAGS) -c display.c
+display.o : display.cpp display.h
+	$(CC) $(CFLAGS) -c display.cpp
 
 .PHONY : clean
 clean :

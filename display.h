@@ -3,32 +3,37 @@
 #include<string.h>
 #include<stdarg.h>
 
-enum
-{
-	RESET=0,
-	RED,
-	BOLD_RED,
-	GREEN,
-	BOLD_GREEN,
-	YELLOW,
-	BOLD_YELLOW,
-	BLUE,
-	BOLD_BLUE,
-	MAGENTA,
-	BOLD_MAGENTA,
-	CYAN,
-	BOLD_CYAN
-};
-
-char *szFormat[] = {"[0m","[0;31m","[1;31m","[0;32m","[1;32m","[0;33m","[1;33m","[0;34m","[1;34m","[0;35m","[1;35m","[0;36m","[1;36m"};
-
 #define ON 1
 #define OFF 0
 
 #define CONSOLE_PRINT OFF
-#define FILE_PRINT ON 
+#define FILE_PRINT OFF 
 
-#define DEBUG_ON OFF
+#define DEBUG_ON ON
+
+/*
+Black: \e[30m.
+Red: \e[31m.
+Green: \e[32m.
+Yellow: \e[33m.
+Blue: \e[34m.
+Magenta: \e[35m.
+Cyan: \e[36m.
+White: \e[37m
+*/
+
+#define BOLD	"\e[1m"
+#define ITELLIC	"\e[2m"
+#define RESET   "\e[0m"
+#define BLACK	"\e[0;30m"
+#define RED     "\e[0;31m"
+#define GREEN    "\e[0;32m"
+#define YELLOW	"\e[0;33m"
+#define BLUE	"\e[0;34m"
+#define MAGENTA	"\e[0;35m"
+#define CYAN    "\e[0;36m"
+#define WHITE	"\e[0;37m"
+
 
 #define ENTRING_FUNCTION_STR "in function %s\n"
 #define LEAVE_FUNCTION_STR "leaving function %s\n"
@@ -53,8 +58,6 @@ void DrawLine();
 void SetValues();
 void ShrinkData(char **pcStart, char **pcEnd, char *szTemp, int size,char pcSeperator);
 void DisplayData(struct Data *phead , struct Data *ptail);
-void deleteall(struct Data **phead);
-void insertlast(struct Data **phead,struct Data **plast,struct Data data);
-void copystr(char *str1,char *str2,int len);
 void writeinlogfile(char *szBuffer,...);
 void PrintfColoums();
+void printSpace(int i);
